@@ -1,7 +1,7 @@
 package cdn
 
 import (
-	"cdn_client/utils"
+	"cndClientGO/utils"
 	"encoding/json"
 	"errors"
 	"reflect"
@@ -47,15 +47,15 @@ func NewRawContentFile(rawContent []byte) (*RawContentFile, error) {
 func (r *RawContentFile) FillAttr(data map[string]interface{}) {
 	//TODO implement me
 	val := reflect.ValueOf(r).Elem()
-	
+
 	for key, value := range data {
 		camelKey := utils.ToCamelCase(key)
-		
+
 		field := val.FieldByName(camelKey)
 		if !field.IsValid() {
 			continue
 		}
-		
+
 		if field.CanSet() {
 			strValue, ok := value.(string)
 			if ok {
@@ -69,6 +69,6 @@ func (r *RawContentFile) FillAttr(data map[string]interface{}) {
 				panic(errors.New("value type is not convertible to field type"))
 			}
 		}
-		
+
 	}
 }

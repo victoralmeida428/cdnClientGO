@@ -1,4 +1,4 @@
-module cdn_client
+module cndClientGO
 
 go 1.23.0
 
