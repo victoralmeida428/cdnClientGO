@@ -3,9 +3,9 @@ package cdn
 import "C"
 import (
 	"bytes"
-	"cndClientGO/utils"
 	"encoding/json"
 	"fmt"
+	"github.com/victoralmeida428/cdnClientGO/utils"
 	"io"
 	"mime/multipart"
 	"net/http"

@@ -1,9 +1,9 @@
 package cdn
 
 import (
-	"cndClientGO/utils"
 	"encoding/json"
 	"errors"
+	"github.com/victoralmeida428/cdnClientGO/utils"
 	"reflect"
 	"strings"
 )

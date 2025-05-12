@@ -1,4 +1,4 @@
-module cndClientGO
+module github.com/victoralmeida428/cdnClientGO
 
 go 1.23.0
 
