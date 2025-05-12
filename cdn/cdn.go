@@ -9,8 +9,6 @@ import (
 	"io"
 	"mime/multipart"
 	"net/http"
-	"os"
-	"path/filepath"
 	"strconv"
 )
 
@@ -49,14 +47,7 @@ func New() *CDN {
 
 }
 
-func (c *CDN) addCurl(fullFilePath, fileName string, dadosUsuario map[string]interface{}) (IResponse, error) {
-
-	// Abre o arquivo
-	file, err := os.Open(fullFilePath)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
+func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[string]interface{}) (IResponse, error) {
 
 	// Prepara o body da requisição multipart
 	body := &bytes.Buffer{}
@@ -76,16 +67,12 @@ func (c *CDN) addCurl(fullFilePath, fileName string, dadosUsuario map[string]int
 		return nil, err
 	}
 
-	// Adiciona o arquivo
-	if fileName == "" {
-		fileName = filepath.Base(fullFilePath)
-	}
 	part, err := writer.CreateFormFile("file", fileName)
 
 	if err != nil {
 		return nil, err
 	}
-	_, err = io.Copy(part, file)
+	_, err = io.Copy(part, fullFilePath)
 	if err != nil {
 		return nil, err
 	}
@@ -147,11 +134,8 @@ func (c *CDN) SetResponse(field int, rawContent IRawContentFile) IResponse {
 	return &response
 }
 
-func (c CDN) AddFile(fullFilePath, fileName string, dadosUsuario map[string]interface{}) (IResponse, error) {
+func (c CDN) AddFile(fullFilePath io.Reader, fileName string, dadosUsuario map[string]interface{}) (IResponse, error) {
 
-	if fileName == "" {
-		fileName = fullFilePath
-	}
 	return c.addCurl(fullFilePath, fileName, dadosUsuario)
 }
 

@@ -1,6 +1,9 @@
 package cdn
 
-import "net/http"
+import (
+	"io"
+	"net/http"
+)
 
 type IResponse interface {
 	GetField() int
@@ -24,7 +27,7 @@ type IRawContentFile interface {
 }
 
 type ICDN interface {
-	AddFile(fullFilePath, fileName string, dadosUsuario map[string]interface{}) (IResponse, error)
+	AddFile(fullFilePath io.Reader, fileName string, dadosUsuario map[string]interface{}) (IResponse, error)
 	SetCheckVirus(checkVirus bool)
 	View(idFile int, w http.ResponseWriter) (bool, error)
 	ExistsFile(idFile int) (bool, error)
