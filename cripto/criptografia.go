@@ -7,7 +7,6 @@ import (
 	"crypto/x509"
 	"encoding/base64"
 	"encoding/pem"
-	"log"
 	"os"
 )
 
@@ -26,17 +25,17 @@ func New() *Criptografia {
 func (g *Criptografia) loadPrivateKey(path string) {
 	keyBytes, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		log.Fatal("failed to decode PEM block")
+		panic("failed to decode PEM block")
 	}
 
 	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 	g.privateKey = privateKey
 }
@@ -44,28 +43,28 @@ func (g *Criptografia) loadPrivateKey(path string) {
 func (g *Criptografia) loadPublicKey(path string) {
 	keyBytes, err := os.ReadFile(path)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		log.Fatal("failed to decode PEM block")
+		panic("failed to decode PEM block")
 	}
 
 	// Alterado para ParsePKIXPublicKey
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		log.Fatal(err)
+		panic(err)
 	}
 
 	publicKey, ok := pub.(*rsa.PublicKey)
 	if !ok {
-		log.Fatal("not an RSA public key")
+		panic("not an RSA public key")
 	}
 	g.publicKey = publicKey
 }
 
-func (c Criptografia) Encode(s string) string {
+func (c Criptografia) Encode(s string) (string, error) {
 	msg := []byte(s)
 	hash := sha256.New()
 
@@ -77,16 +76,16 @@ func (c Criptografia) Encode(s string) string {
 		nil,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(ciphertext)
+	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (c Criptografia) Decode(s string) string {
+func (c Criptografia) Decode(s string) (string, error) {
 	// Decodifica a string base64
 	ciphertext, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
 	hash := sha256.New()
@@ -99,8 +98,8 @@ func (c Criptografia) Decode(s string) string {
 		nil,
 	)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return string(plaintext)
+	return string(plaintext), nil
 }
