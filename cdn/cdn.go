@@ -143,18 +143,6 @@ func (c *CDN) SetCheckVirus(checkVirus bool) {
 	c.CheckVirus = Check(checkVirus)
 }
 
-//func (c *CDN) setFileInfoData(wrapperData http.Header) {
-//	dados := make(map[string]interface{})
-//	for key, row := range wrapperData {
-//		dados[key] = row[0]
-//	}
-//	rawContent, err := NewRawContentFile(dados)
-//	if err != nil {
-//		panic(err)
-//	}
-//	c.rawContentFile = rawContent
-//}
-
 func (c *CDN) setHeader(header http.Header) {
 	if header == nil {
 		panic("cdn.SetHeader: req is nil")
@@ -235,13 +223,13 @@ func (c *CDN) existFileByRefArquivo(refArquivo int) (bool, error) {
 	defer resp.Body.Close()
 	c.HttpCode = resp.StatusCode
 
-	var output string
+	var output interface{}
 
 	if err = json.NewDecoder(resp.Body).Decode(&output); err != nil {
 		return false, fmt.Errorf("failed to decode response: %v", err)
 	}
-
-	return utils.IsTrue(output), nil
+	fmt.Println(output)
+	return utils.IsTrue(output.(string)), nil
 }
 
 func (c CDN) ExistsFile(idFile int) (bool, error) {
