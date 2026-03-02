@@ -113,6 +113,7 @@ func (c CDN) sendCurl(writer *multipart.Writer, body *bytes.Buffer, path string)
 	if err != nil {
 		return nil, err
 	}
+	c.setHeader(&req.Header)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("Accept", "application/json")
 
@@ -143,7 +144,7 @@ func (c *CDN) SetCheckVirus(checkVirus bool) {
 	c.CheckVirus = Check(checkVirus)
 }
 
-func (c *CDN) setHeader(header http.Header) {
+func (c *CDN) setHeader(header *http.Header) {
 	if header == nil {
 		panic("cdn.SetHeader: req is nil")
 	}
