@@ -1,6 +1,6 @@
 package cripto
 
 type ICriptografia interface {
-	Encode(string) string
-	Decode(string) string
+	Encode(string) (string, error)
+	Decode(string) (string, error)
 }

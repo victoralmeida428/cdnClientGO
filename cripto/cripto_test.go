@@ -8,7 +8,7 @@ import (
 
 func TestCriptografia(t *testing.T) {
 
-	crip := New()
+	crip := New("./public_key.pem", "./private_key.pem")
 
 	msg := "1792"
 	msgCripto, _ := crip.Encode(msg)

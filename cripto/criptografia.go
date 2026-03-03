@@ -15,11 +15,11 @@ type Criptografia struct {
 	publicKey  *rsa.PublicKey
 }
 
-func New() *Criptografia {
-	var cript Criptografia
-	cript.loadPublicKey("./public_key.pem")
-	cript.loadPrivateKey("./private_key.pem")
-	return &cript
+func New(public, private string) *Criptografia {
+	c := &Criptografia{}
+	c.loadPublicKey(public)
+	c.loadPrivateKey(private)
+	return c
 }
 
 func (g *Criptografia) loadPrivateKey(path string) {
@@ -27,17 +27,21 @@ func (g *Criptografia) loadPrivateKey(path string) {
 	if err != nil {
 		panic(err)
 	}
-
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		panic("failed to decode PEM block")
+		panic("falha ao decodificar PEM")
 	}
 
-	privateKey, err := x509.ParsePKCS1PrivateKey(block.Bytes)
-	if err != nil {
-		panic(err)
+	// Tenta PKCS1, se falhar tenta PKCS8 (o seu formato atual)
+	if key, err := x509.ParsePKCS1PrivateKey(block.Bytes); err == nil {
+		g.privateKey = key
+	} else {
+		key8, err := x509.ParsePKCS8PrivateKey(block.Bytes)
+		if err != nil {
+			panic("formato de chave privada não suportado")
+		}
+		g.privateKey = key8.(*rsa.PrivateKey)
 	}
-	g.privateKey = privateKey
 }
 
 func (g *Criptografia) loadPublicKey(path string) {
@@ -45,61 +49,35 @@ func (g *Criptografia) loadPublicKey(path string) {
 	if err != nil {
 		panic(err)
 	}
-
 	block, _ := pem.Decode(keyBytes)
 	if block == nil {
-		panic("failed to decode PEM block")
+		panic("falha ao decodificar PEM")
 	}
-
-	// Alterado para ParsePKIXPublicKey
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
 		panic(err)
 	}
-
-	publicKey, ok := pub.(*rsa.PublicKey)
-	if !ok {
-		panic("not an RSA public key")
-	}
-	g.publicKey = publicKey
+	g.publicKey = pub.(*rsa.PublicKey)
 }
 
-func (c Criptografia) Encode(s string) (string, error) {
-	msg := []byte(s)
-	hash := sha256.New()
-
-	ciphertext, err := rsa.EncryptOAEP(
-		hash,
-		rand.Reader,
-		c.publicKey,
-		msg,
-		nil,
-	)
+func (c *Criptografia) Encode(s string) (string, error) {
+	// Importante: SHA256 deve ser instanciado aqui
+	ciphertext, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, c.publicKey, []byte(s), nil)
 	if err != nil {
 		return "", err
 	}
 	return base64.StdEncoding.EncodeToString(ciphertext), nil
 }
 
-func (c Criptografia) Decode(s string) (string, error) {
-	// Decodifica a string base64
+func (c *Criptografia) Decode(s string) (string, error) {
 	ciphertext, err := base64.StdEncoding.DecodeString(s)
 	if err != nil {
 		return "", err
 	}
-
-	hash := sha256.New()
-
-	plaintext, err := rsa.DecryptOAEP(
-		hash,
-		rand.Reader,
-		c.privateKey,
-		ciphertext,
-		nil,
-	)
+	// Importante: SHA256 deve ser instanciado aqui também
+	plaintext, err := rsa.DecryptOAEP(sha256.New(), rand.Reader, c.privateKey, ciphertext, nil)
 	if err != nil {
 		return "", err
 	}
-
 	return string(plaintext), nil
 }
