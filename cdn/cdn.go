@@ -92,26 +92,40 @@ func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[
 	defer resp.Body.Close()
 	c.HttpCode = resp.StatusCode
 
-	// Processa a resposta (ajuste conforme sua estrutura de Response)
-	var output []struct {
+	// 1. Lemos o corpo da resposta
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("falha ao ler corpo da resposta: %v", err)
+	}
+
+	// 2. Se o corpo estiver completamente vazio (EOF)
+	if len(bytes.TrimSpace(bodyBytes)) == 0 {
+		// Verificamos se o HTTP Status é de sucesso (200, 201, etc.)
+		if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+			// Sucesso! Mas como o PHP não devolveu o ID, devolvemos 0 e o nome do ficheiro
+			var rawContent RawContentFile
+			rawContent.FileName = fileName
+			return c.SetResponse(0, &rawContent), nil
+		}
+		return nil, fmt.Errorf("erro no servidor (Status %d) com resposta vazia", resp.StatusCode)
+	}
+
+	// 3. Se houver corpo, tentamos decodificar a lista JSON (conforme vimos antes)
+	var output struct {
 		Created        map[string]interface{} `json:"created"`
 		RawContentFile map[string]interface{} `json:"raw_content_file"`
 		RawContentUser map[string]interface{} `json:"raw_content_user"`
 		IdFile         int                    `json:"id_arquivo"`
 	}
-	// Decodifica o JSON da resposta se necessário
-	if err = json.NewDecoder(resp.Body).Decode(&output); err != nil {
-		return nil, fmt.Errorf("failed to decode response: %v", err)
-	}
 
-	if len(output) == 0 {
-		return nil, fmt.Errorf("no output from CDN")
+	if err := json.Unmarshal(bodyBytes, &output); err != nil {
+		return nil, fmt.Errorf("resposta inesperada do servidor: %s", string(bodyBytes))
 	}
 
 	var rawContent RawContentFile
-	rawContent.FillAttr(output[0].RawContentFile)
+	rawContent.FillAttr(output.RawContentFile)
 
-	return c.SetResponse(output[0].IdFile, &rawContent), err
+	return c.SetResponse(output.IdFile, &rawContent), nil
 }
 
 func (c CDN) sendCurl(writer *multipart.Writer, body *bytes.Buffer, path string) (*http.Response, error) {
