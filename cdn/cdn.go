@@ -86,6 +86,9 @@ func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[
 
 	// Cria a requisição
 	resp, err := c.sendCurl(writer, body, "/add/")
+	if err != nil {
+		return nil, fmt.Errorf("falha ao contactar o CDN: %v", err)
+	}
 	defer resp.Body.Close()
 	c.HttpCode = resp.StatusCode
 
