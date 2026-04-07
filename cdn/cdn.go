@@ -17,9 +17,9 @@ type Check bool
 
 func (c Check) String() string {
 	if c {
-		return "true"
+		return "1"
 	}
-	return "false"
+	return "0"
 }
 
 type CDN struct {
