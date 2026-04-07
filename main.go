@@ -19,9 +19,9 @@ func init() {
 func main() {
 	handlePost := func(w http.ResponseWriter, req *http.Request) {
 		// 1. Abrir o arquivo README.md local
-		file, err := os.Open("README.md")
+		file, err := os.Open("ficha.docx")
 		if err != nil {
-			http.Error(w, fmt.Sprintf("Erro ao abrir o arquivo README.md: %v", err), http.StatusInternalServerError)
+			http.Error(w, fmt.Sprintf("Erro ao abrir o arquivo ficha.docx: %v", err), http.StatusInternalServerError)
 			return
 		}
 		// Garante que o arquivo será fechado ao final da execução
@@ -32,12 +32,12 @@ func main() {
 
 		// 3. Criar os dados de usuário (exigido pela interface do AddFile)
 		dadosUsuario := map[string]interface{}{
-			"descricao": "Upload de teste do README",
+			"descricao": "Upload de teste do ficha.docx",
 			"origem":    "script local",
 		}
 
 		// 4. Fazer o upload chamando AddFile
-		response, err := clientCdn.AddFile(file, "README.md", dadosUsuario)
+		response, err := clientCdn.AddFile(file, "ficha", dadosUsuario)
 		if err != nil {
 			http.Error(w, fmt.Sprintf("Erro ao enviar para o CDN: %v", err), http.StatusInternalServerError)
 			return
@@ -47,7 +47,6 @@ func main() {
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(w, "Upload realizado com sucesso!\nID gerado no CDN: %d\n", response.GetField())
 	}
-
 
 	http.HandleFunc("GET /view/{id}", func(w http.ResponseWriter, req *http.Request) {
 		// 1. Extrair e validar o ID da URL
@@ -81,9 +80,7 @@ func main() {
 
 	})
 
-
 	http.HandleFunc("/", handlePost)
-
 
 	fmt.Println("Listening on port http://localhost:5000")
 	err := http.ListenAndServe("localhost:5000", nil)

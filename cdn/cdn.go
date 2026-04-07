@@ -17,9 +17,9 @@ type Check bool
 
 func (c Check) String() string {
 	if c {
-		return "1"
+		return "true"
 	}
-	return "0"
+	return "false"
 }
 
 type CDN struct {
@@ -63,7 +63,6 @@ func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[
 		return nil, err
 	}
 
-	// Adiciona o campo checkVirus (assumindo que getCheckVirus() retorna bool)
 	if err = writer.WriteField("checkVirus", c.CheckVirus.String()); err != nil {
 		return nil, err
 	}
