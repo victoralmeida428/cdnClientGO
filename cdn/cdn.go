@@ -63,8 +63,10 @@ func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[
 		return nil, err
 	}
 
-	if err = writer.WriteField("checkVirus", c.CheckVirus.String()); err != nil {
-		return nil, err
+	if c.CheckVirus {
+		if err = writer.WriteField("checkVirus", c.CheckVirus.String()); err != nil {
+			return nil, err
+		}
 	}
 
 	part, err := writer.CreateFormFile("file", fileName)
