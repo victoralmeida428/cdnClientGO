@@ -5,11 +5,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/victoralmeida428/cdnClientGO/utils"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"strconv"
+
+	"github.com/victoralmeida428/cdnClientGO/utils"
 )
 
 type Check bool
@@ -148,22 +149,28 @@ func (c *CDN) setHeader(header *http.Header) {
 	if header == nil {
 		panic("cdn.SetHeader: req is nil")
 	}
-	var disposition string
-	fileName := c.rawContentFile.GetFileName()
-	if c.Download {
-		disposition = "attachment"
-	} else {
-		disposition = "inline"
+
+	// Proteção: Só injeta os cabeçalhos do ficheiro se ele estiver instanciado
+	if c.rawContentFile != nil {
+		var disposition string
+		fileName := c.rawContentFile.GetFileName()
+
+		if c.Download {
+			disposition = "attachment"
+		} else {
+			disposition = "inline"
+		}
+
+		header.Set("Content-Description", "File Transfer")
+		header.Set("Content-Disposition", fmt.Sprintf("%s; filename=\"%s\"", disposition, fileName))
+		header.Set("Content-Type", c.rawContentFile.GetClientMimeType())
+		header.Set("Content-Length", strconv.FormatInt(c.rawContentFile.GetFileSize(), 64))
 	}
 
-	header.Set("Content-Description", "File Transfer")
-	header.Set("Content-Disposition", fmt.Sprintf("%s; filename=\"%s\"", disposition, fileName))
-	header.Set("Content-Type", c.rawContentFile.GetClientMimeType())
-	header.Set("Content-Length", strconv.FormatInt(c.rawContentFile.GetFileSize(), 64))
+	// Cabeçalhos gerais que podem ir em qualquer requisição
 	header.Set("Expires", "0")
 	header.Set("Pragma", "public")
 	header.Set("Cache-Control", "must-revalidate, post-check=0, pre-check=0")
-
 }
 
 func (c CDN) View(idFile int, w http.ResponseWriter) (bool, error) {
@@ -221,6 +228,9 @@ func (c *CDN) existFileByRefArquivo(refArquivo int) (bool, error) {
 
 	// Envia a requisição usando o método existente
 	resp, err := c.sendCurl(writer, body, "/exist/")
+	if err != nil {
+		return false, fmt.Errorf("falha ao contactar o CDN: %v", err)
+	}
 	defer resp.Body.Close()
 	c.HttpCode = resp.StatusCode
 
