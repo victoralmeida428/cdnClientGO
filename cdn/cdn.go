@@ -93,7 +93,7 @@ func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[
 	c.HttpCode = resp.StatusCode
 
 	// Processa a resposta (ajuste conforme sua estrutura de Response)
-	var output struct {
+	var output []struct {
 		Created        map[string]interface{} `json:"created"`
 		RawContentFile map[string]interface{} `json:"raw_content_file"`
 		RawContentUser map[string]interface{} `json:"raw_content_user"`
@@ -104,12 +104,14 @@ func (c *CDN) addCurl(fullFilePath io.Reader, fileName string, dadosUsuario map[
 		return nil, fmt.Errorf("failed to decode response: %v", err)
 	}
 
+	if len(output) == 0 {
+		return nil, fmt.Errorf("no output from CDN")
+	}
+
 	var rawContent RawContentFile
+	rawContent.FillAttr(output[0].RawContentFile)
 
-	rawContent.FillAttr(output.RawContentFile)
-
-	return c.SetResponse(output.IdFile, &rawContent), err
-
+	return c.SetResponse(output[0].IdFile, &rawContent), err
 }
 
 func (c CDN) sendCurl(writer *multipart.Writer, body *bytes.Buffer, path string) (*http.Response, error) {
