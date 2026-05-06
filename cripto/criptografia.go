@@ -66,11 +66,11 @@ func (c *Criptografia) Encode(s string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return base64.StdEncoding.EncodeToString(ciphertext), nil
+	return base64.URLEncoding.EncodeToString(ciphertext), nil
 }
 
 func (c *Criptografia) Decode(s string) (string, error) {
-	ciphertext, err := base64.StdEncoding.DecodeString(s)
+	ciphertext, err := base64.URLEncoding.DecodeString(s)
 	if err != nil {
 		return "", err
 	}
